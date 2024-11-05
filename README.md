@@ -1,8 +1,40 @@
-# iot-sense
+# IoT Sense
+
+## Overview
+
+Welcome to the IoT Data Collector and Streamer project! This open-source application is designed to facilitate the collection, storage, and real-time streaming of IoT data. It connects seamlessly with a Kafka message broker to receive data, stores it efficiently in a MongoDB database, and streams the collected data to mobile applications in real time.
+
+### Key Features
+
+* Data Ingestion via Kafka: The application consumes IoT data streams from a Kafka broker, allowing it to handle high-throughput, real-time data from various IoT devices.
+* Efficient Data Storage: Data is stored in a MongoDB database for persistence, ensuring that all collected information is safely stored for further analysis and retrieval.
+* Real-Time Data Streaming: The application streams data to connected mobile applications using real-time communication protocols, ensuring up-to-date information for users and devices.
+* Scalable Design: Built to handle high volumes of data and users, the application can easily scale to meet the growing needs of IoT environments.
+
+## Architecture
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+
+1. Kafka Integration: This application subscribes to Kafka topics and consumes messages containing IoT data from various sources (sensors, devices, etc.).
+2. MongoDB Storage: Collected data is structured and stored in MongoDB, providing both scalability and flexibility in data storage.
+3. Mobile Application Streaming: Using WebSockets or other real-time protocols, the application delivers updates and notifications directly to connected mobile clients.
+
+## Getting Started
+
+### Overview
+
+The application relies on some settings to run correctly and these settings are about context where the application is going to run. To allow users to customize the application, there a few settings that are needed to be set.
+The application needs to be configured via following environment variables:
+* `DB_HOST`: MongoDB host name
+* `DB_USER`: MongoDB user credentials to login
+* `DB_PASSWD`: MongoDB password to login
+* `DB_NAME`: The name where the you whant store the data
+* `KAFKA_BOOTSTRAP_SERVERS`: The Kafka brokers base url
+* `HUB_SLUG`: The name of setted Hub in platform configuration phase (see the CLI utilities [🚧 Work in progress] to learn more)
+* `PUBLIC_KEY_LOCATION`: The pem public file to use to validate the JWT (see the CLI utility to know how to generate it)
+* `JWT_AUDIENCE`: The audience of the JWT (same used to generate the JWT with te CLI utility)
 
 ## Running the application in dev mode
 
@@ -52,27 +84,3 @@ Or, if you don't have GraalVM installed, you can run the native executable build
 You can then execute your native executable with: `./build/iot-sense-1.0.0-SNAPSHOT-runner`
 
 If you want to learn more about building native executables, please consult <https://quarkus.io/guides/gradle-tooling>.
-
-## Related Guides
-
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
-
-## Provided Code
-
-### Hibernate ORM
-
-Create your first JPA entity
-
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
-
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
-
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
