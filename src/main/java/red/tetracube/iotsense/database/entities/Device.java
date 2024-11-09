@@ -1,20 +1,18 @@
 package red.tetracube.iotsense.database.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.*;
 import red.tetracube.iotsense.enumerations.DeviceType;
 
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "devices")
-public class Device extends PanacheEntity {
+public class Device extends PanacheEntityBase {
+
+    @Id
+    public UUID id;
 
     @Column(name = "internal_name", unique = true, nullable = false)
     public String internalName;
@@ -28,7 +26,7 @@ public class Device extends PanacheEntity {
     @Column(name = "hubSlug", nullable = false)
     public String hubSlug;
 
-    @Column(name = "room_slug", nullable = true)
+    @Column(name = "room_slug")
     public String roomSlug;
 
     @Enumerated(EnumType.STRING)

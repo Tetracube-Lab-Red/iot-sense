@@ -4,6 +4,7 @@ public sealed class IoTSenseException extends Exception permits
         IoTSenseException.EntityExistsException,
         IoTSenseException.EntityNotFoundException,
         IoTSenseException.RepositoryException,
+        IoTSenseException.InternalException,
         IoTSenseException.UnauthorizedException {
 
     public static final class RepositoryException extends IoTSenseException {
@@ -20,6 +21,12 @@ public sealed class IoTSenseException extends Exception permits
 
     public static final class EntityExistsException extends IoTSenseException {
         public EntityExistsException(String message) {
+            super(message);
+        }
+    }
+
+    public static final class InternalException extends IoTSenseException {
+        public InternalException(String message) {
             super(message);
         }
     }
