@@ -9,20 +9,15 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import red.tetracube.iotsense.enumerations.DeviceInteractionClass;
-import red.tetracube.iotsense.enumerations.DeviceInteractionType;
+import red.tetracube.iotsense.enumerations.DeviceCommandType;
 
 @Entity
 @Table(name = "devices_interactions")
-public class DeviceInteraction extends PanacheEntity{
+public class DeviceSupportedCommand extends PanacheEntity{
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "interaction_type", nullable = false)
-    public DeviceInteractionType interactionType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "interaction_class", nullable = true)
-    public DeviceInteractionClass interactionClass;
+    @Column(name = "device_command_type", nullable = true)
+    public DeviceCommandType deviceCommandType;
 
     @JoinColumn(name = "device_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Device.class)

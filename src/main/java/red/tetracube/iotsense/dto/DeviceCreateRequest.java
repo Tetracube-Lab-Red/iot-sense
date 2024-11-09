@@ -3,10 +3,7 @@ package red.tetracube.iotsense.dto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import red.tetracube.iotsense.enumerations.DeviceType;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type")
@@ -20,6 +17,7 @@ public sealed class DeviceCreateRequest permits DeviceCreateRequest.UPS {
 
     @NotEmpty
     @NotNull
+    @Pattern(regexp = "^[ \\w]+$") @Size(min = 5, max = 50)
     public String deviceName;
 
     public String roomSlug;

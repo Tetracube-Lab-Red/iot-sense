@@ -1,5 +1,5 @@
 package red.tetracube.iotsense.enumerations;
 
-public enum DeviceInteractionClass {
+public enum DeviceCommandType {
     SWITCH
 }

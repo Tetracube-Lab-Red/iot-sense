@@ -25,7 +25,7 @@ public class Device extends PanacheEntity {
     @Column(name = "human_name", nullable = false)
     public String humanName;
 
-    @Column(name = "hubSlug", nullable = true)
+    @Column(name = "hubSlug", nullable = false)
     public String hubSlug;
 
     @Column(name = "room_slug", nullable = true)
@@ -35,15 +35,14 @@ public class Device extends PanacheEntity {
     @Column(name = "device_type", nullable = false)
     public DeviceType deviceType;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "device", orphanRemoval = true, targetEntity = DeviceInteraction.class)
-    public List<DeviceInteraction> deviceInteractions;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "device", orphanRemoval = true, targetEntity = DeviceSupportedCommand.class)
+    public List<DeviceSupportedCommand> deviceSupportedCommands;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "device", targetEntity = DeviceTelemetry.class)
     public List<DeviceTelemetry> deviceTelemetries;
 
-    public static Device getByInternalName(String internalName) {
-        return Device.<Device>find("internalName", internalName)
-                .firstResult();
+    public static Boolean existsBySlug(String slug) {
+        return Device.count("slug", slug) == 1;
     }
 
 }
