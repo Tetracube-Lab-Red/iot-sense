@@ -1,0 +1,18 @@
+package red.tetracube.iotsense.enumerations;
+
+public enum UPSStatus {
+    ONLINE,
+    ON_BATTERY,
+    LOW_BATTERY,
+    HIGH_BATTERY,
+    REPLACE_BATTERY,
+    BATTERY_CHARGING,
+    BATTERY_DISCHARGING,
+    BYPASS,
+    UPS_CALIBRATING,
+    OFFLINE,
+    UPS_OVERLOAD,
+    INCOMING_TRIMMING,
+    INCOMING_BOOST,
+    FORCED_SHUTDOWN
+}

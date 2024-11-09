@@ -10,6 +10,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import red.tetracube.iotsense.enumerations.DeviceType;
 
+import java.util.List;
+
 @Entity
 @Table(name = "devices")
 public class Device extends PanacheEntity {
@@ -35,6 +37,9 @@ public class Device extends PanacheEntity {
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "device", orphanRemoval = true, targetEntity = DeviceInteraction.class)
     public List<DeviceInteraction> deviceInteractions;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "device", targetEntity = DeviceTelemetry.class)
+    public List<DeviceTelemetry> deviceTelemetries;
 
     public static Device getByInternalName(String internalName) {
         return Device.<Device>find("internalName", internalName)
