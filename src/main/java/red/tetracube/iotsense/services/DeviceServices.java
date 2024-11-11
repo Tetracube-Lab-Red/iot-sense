@@ -1,20 +1,20 @@
 package red.tetracube.iotsense.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import red.tetracube.iotsense.broker.BrokerClient;
 import red.tetracube.iotsense.database.entities.Device;
 import red.tetracube.iotsense.database.entities.DeviceSupportedCommand;
 import red.tetracube.iotsense.dto.DeviceCreateRequest;
 import red.tetracube.iotsense.dto.DeviceCreateResponse;
 import red.tetracube.iotsense.dto.Result;
-import red.tetracube.iotsense.dto.broker.DeviceUPSProvisioning;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
+import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
+import red.tetracube.iotsense.modules.ups.dto.DeviceProvisioningRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,12 +23,13 @@ import java.util.UUID;
 public class DeviceServices {
 
     @Inject
-    BrokerClient brokerClient;
+    @RestClient
+    UPSPulsarAPIClient upsPulsarAPIClient;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
 
-    @Transactional
-    public Result<DeviceCreateResponse> createDevice(String hubSlug, DeviceCreateRequest request){
+    @Transactional(rollbackOn = {Exception.class})
+    public Result<DeviceCreateResponse> createDevice(String hubSlug, DeviceCreateRequest request) {
         LOGGER.info("Create device slug from the name");
         var deviceSlug = request.deviceName.trim().replaceAll(" ", "_").toLowerCase();
 
@@ -41,7 +42,7 @@ public class DeviceServices {
         LOGGER.info("Store device in database");
         var device = new Device();
         device.internalName = switch (request.deviceType) {
-            case UPS -> ((DeviceCreateRequest.UPS) request).nutAlias;
+            case UPS -> request.upsProvisioning.internalName;
         };
         device.id = UUID.randomUUID();
         device.slug = deviceSlug;
@@ -52,7 +53,7 @@ public class DeviceServices {
         device.deviceSupportedCommands = buildDeviceInteractionsForDeviceType(request.deviceType);
         device.persist();
 
-        LOGGER.info("Emit message in the broker on the right topic");
+        LOGGER.info("Calling right module for device provisioning");
         var response = new DeviceCreateResponse(
                 device.id,
                 device.deviceType,
@@ -60,12 +61,7 @@ public class DeviceServices {
                 device.humanName,
                 device.roomSlug
         );
-
-        try {
-            publicDeviceProvisioning(request);
-        } catch (JsonProcessingException e) {
-            return Result.failed(new IoTSenseException.InternalException(e.getMessage()));
-        }
+        publishDeviceProvisioning(request);
 
         return Result.success(response);
     }
@@ -76,15 +72,15 @@ public class DeviceServices {
         };
     }
 
-    private void publicDeviceProvisioning(DeviceCreateRequest deviceCreateRequest) throws JsonProcessingException {
+    private void publishDeviceProvisioning(DeviceCreateRequest deviceCreateRequest) {
         if (deviceCreateRequest.deviceType == DeviceType.UPS) {
-            var upsCreate = (DeviceCreateRequest.UPS)deviceCreateRequest;
-            var deviceUPSProvisioning = new DeviceUPSProvisioning(
-                    upsCreate.nutAddress,
-                    upsCreate.nutPort,
-                    upsCreate.nutAlias
+            LOGGER.info("Transmitting UPS provisioning to ups pulsar module");
+            var deviceProvisioningRequest = new DeviceProvisioningRequest(
+                    deviceCreateRequest.upsProvisioning.deviceAddress,
+                    deviceCreateRequest.upsProvisioning.devicePort,
+                    deviceCreateRequest.upsProvisioning.internalName
             );
-            brokerClient.publishUPSProvisioningMessage(deviceUPSProvisioning);
+            upsPulsarAPIClient.deviceProvisioning(deviceProvisioningRequest);
         }
     }
 

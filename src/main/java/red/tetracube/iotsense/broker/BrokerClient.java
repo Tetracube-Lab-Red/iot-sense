@@ -10,9 +10,9 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import red.tetracube.iotsense.config.IoTSenseConfig;
 
 import java.util.UUID;
 
@@ -26,16 +26,13 @@ public class BrokerClient {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(BrokerClient.class);
 
-    public BrokerClient(
-            @ConfigProperty(name = "iot-sense.mqtt.client-name") String mqttClientName,
-            @ConfigProperty(name = "iot-sense.mqtt.address") String mqttAddress
-    ) {
+    public BrokerClient(IoTSenseConfig ioTSenseConfig) {
         client = MqttClient.builder()
-                .identifier(mqttClientName + "-" + UUID.randomUUID())
+                .identifier(ioTSenseConfig.mqtt().clientName() + "-" + UUID.randomUUID())
                 .automaticReconnectWithDefaultConfig()
                 .automaticReconnect()
                 .applyAutomaticReconnect()
-                .serverHost(mqttAddress)
+                .serverHost(ioTSenseConfig.mqtt().address())
                 .useMqttVersion5()
                 .build()
                 .toAsync();
@@ -48,10 +45,6 @@ public class BrokerClient {
                 )
                 .subscribe()
                 .with(connectAck -> LOGGER.info("MQTT connection result code {}", connectAck.getReasonCode()));
-    }
-
-    public void publishUPSProvisioningMessage(Object message) throws JsonProcessingException {
-       publishMessage("device/provisioning/ups", message);
     }
 
     private void publishMessage(String topic, Object message) throws JsonProcessingException {

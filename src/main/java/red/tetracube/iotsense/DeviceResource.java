@@ -11,9 +11,11 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.dto.DeviceCreateRequest;
 import red.tetracube.iotsense.dto.DeviceCreateResponse;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
+import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.services.DeviceServices;
 
 @RequestScoped
@@ -22,14 +24,14 @@ import red.tetracube.iotsense.services.DeviceServices;
 public class DeviceResource {
 
     @Inject
-    JsonWebToken jwt;
-
-    @Inject
     @Claim(value = "hub_slug")
     String hubSlug;
 
     @Inject
     DeviceServices deviceServices;
+
+    @Inject
+    IoTSenseConfig ioTSenseConfig;
 
     @RunOnVirtualThread
     @POST
@@ -37,6 +39,10 @@ public class DeviceResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceCreateResponse deviceCreate(@RequestBody @Valid DeviceCreateRequest request) {
+        if (request.deviceType == DeviceType.UPS && !ioTSenseConfig.modules().ups().enabled()) {
+            throw new ServerErrorException(Response.Status.NOT_IMPLEMENTED, null);
+        }
+
         var deviceCreateResult = deviceServices.createDevice(hubSlug, request);
         if (deviceCreateResult.isSuccess()) {
             return deviceCreateResult.getContent();
