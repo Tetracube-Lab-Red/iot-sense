@@ -80,6 +80,7 @@ public class DeviceServices {
                     deviceCreateRequest.upsProvisioning.devicePort,
                     deviceCreateRequest.upsProvisioning.internalName
             );
+            // ToDo: if the device already provisioned, verify that there is another device registered with the same internal name, in that case go on storing the missing data in iot-sense schema
             upsPulsarAPIClient.deviceProvisioning(deviceProvisioningRequest);
         }
     }

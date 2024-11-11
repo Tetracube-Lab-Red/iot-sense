@@ -12,7 +12,7 @@ import red.tetracube.iotsense.modules.ups.dto.DeviceProvisioningRequest;
 @RegisterRestClient(configKey="ups-pulsar-api")
 public interface UPSPulsarAPIClient {
 
-    @Path("/device-provisioning")
+    @Path("/device/provisioning")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
