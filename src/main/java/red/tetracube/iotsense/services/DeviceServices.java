@@ -10,6 +10,7 @@ import red.tetracube.iotsense.database.entities.Device;
 import red.tetracube.iotsense.database.entities.DeviceSupportedCommand;
 import red.tetracube.iotsense.dto.DeviceCreateRequest;
 import red.tetracube.iotsense.dto.DeviceCreateResponse;
+import red.tetracube.iotsense.dto.DeviceDataItem;
 import red.tetracube.iotsense.dto.Result;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
@@ -27,6 +28,21 @@ public class DeviceServices {
     UPSPulsarAPIClient upsPulsarAPIClient;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
+
+    @Transactional
+    public List<DeviceDataItem> getDevices(String hubSlug) {
+        return Device.<Device>findAll().stream()
+                .map(device ->
+                        new DeviceDataItem(
+                                device.id,
+                                device.deviceType,
+                                device.slug,
+                                device.humanName,
+                                device.roomSlug
+                        )
+                )
+                .toList();
+    }
 
     @Transactional(rollbackOn = {Exception.class})
     public Result<DeviceCreateResponse> createDevice(String hubSlug, DeviceCreateRequest request) {

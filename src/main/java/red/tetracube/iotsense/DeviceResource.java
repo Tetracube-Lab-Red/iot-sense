@@ -13,6 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.dto.DeviceCreateRequest;
 import red.tetracube.iotsense.dto.DeviceCreateResponse;
+import red.tetracube.iotsense.dto.GetDevicesResponse;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.services.DeviceServices;
@@ -54,6 +55,13 @@ public class DeviceResource {
         }
     }
 
-    // Update device room
+    @RunOnVirtualThread
+    @GET
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public GetDevicesResponse getDevices() {
+        var devices = deviceServices.getDevices(hubSlug);
+        return new GetDevicesResponse(devices);
+    }
 
 }
