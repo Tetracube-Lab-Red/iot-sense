@@ -7,8 +7,6 @@ import io.smallrye.mutiny.Multi;
 import jakarta.inject.Inject;
 import red.tetracube.iotsense.broker.BrokerClient;
 
-import java.time.Duration;
-
 @WebSocket(path = "/devices/telemetry")
 public class TelemetryWebsocket {
 
