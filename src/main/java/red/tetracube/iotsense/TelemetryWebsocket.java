@@ -6,6 +6,7 @@ import io.quarkus.websockets.next.WebSocketConnection;
 import io.smallrye.mutiny.Multi;
 import jakarta.inject.Inject;
 import red.tetracube.iotsense.broker.BrokerClient;
+import red.tetracube.iotsense.dto.DeviceTelemetryData;
 
 @WebSocket(path = "/devices/telemetry")
 public class TelemetryWebsocket {
@@ -17,7 +18,7 @@ public class TelemetryWebsocket {
     BrokerClient brokerClient;
 
     @OnOpen
-    public Multi<Long> streamDeviceTelemetry() {
+    public Multi<DeviceTelemetryData> streamDeviceTelemetry() {
         return brokerClient.getDeviceTelemetryIdStream();
     }
 
