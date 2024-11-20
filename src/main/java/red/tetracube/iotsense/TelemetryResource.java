@@ -23,7 +23,7 @@ public class TelemetryResource {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public DeviceTelemetryData getDevices(@PathParam("deviceSlug") String deviceSlug) {
+    public DeviceTelemetryData getDeviceTelemetry(@PathParam("deviceSlug") String deviceSlug) {
         var getTelemetryResult = telemetryServices.getLatestDeviceTelemetry(deviceSlug);
         if (getTelemetryResult.isSuccess()) {
             return getTelemetryResult.getContent();

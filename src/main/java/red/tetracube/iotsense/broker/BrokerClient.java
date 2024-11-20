@@ -6,7 +6,9 @@ import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -14,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import red.tetracube.iotsense.config.IoTSenseConfig;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -23,6 +26,7 @@ public class BrokerClient {
     ObjectMapper objectMapper;
 
     private final Mqtt5AsyncClient client;
+    private final BroadcastProcessor<Long> deviceTelemetryIdStream = BroadcastProcessor.create();
 
     private final static Logger LOGGER = LoggerFactory.getLogger(BrokerClient.class);
 
@@ -44,7 +48,23 @@ public class BrokerClient {
                         client.connect()
                 )
                 .subscribe()
-                .with(connectAck -> LOGGER.info("MQTT connection result code {}", connectAck.getReasonCode()));
+                .with(connectAck -> {
+                    LOGGER.info("MQTT connection result code {}", connectAck.getReasonCode());
+                    listenDevicesEvents();
+                });
+    }
+
+    public Multi<Long> getDeviceTelemetryIdStream() {
+        return deviceTelemetryIdStream;
+    }
+
+    private void listenDevicesEvents() {
+        Multi.createFrom().ticks().every(Duration.ofSeconds(1))
+                .subscribe()
+                .with(tick -> {
+                    LOGGER.info("tick: {}", tick);
+                    deviceTelemetryIdStream.onNext(tick);
+                });
     }
 
     private void publishMessage(String topic, Object message) throws JsonProcessingException {
