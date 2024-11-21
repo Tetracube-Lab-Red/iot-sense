@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.dto.DeviceTelemetryData;
+import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.services.TelemetryServices;
 
 import java.util.*;
@@ -32,7 +33,7 @@ public class BrokerClient {
     TelemetryServices telemetryServices;
 
     private final Mqtt5AsyncClient client;
-    private final BroadcastProcessor<Map.Entry<UUID, String>> deviceTelemetryIdStream = BroadcastProcessor.create();
+    private final BroadcastProcessor<Map.Entry<DeviceType, String>> deviceTelemetryIdStream = BroadcastProcessor.create();
 
     private final static Logger LOGGER = LoggerFactory.getLogger(BrokerClient.class);
 
@@ -67,11 +68,11 @@ public class BrokerClient {
 
     public Multi<DeviceTelemetryData> getDeviceTelemetryIdStream() {
         return deviceTelemetryIdStream
-                .invoke(telemetryEntry -> LOGGER.info("Arrived telemetry id {} for device {}", telemetryEntry.getKey(), telemetryEntry.getValue()))
+                .invoke(telemetryEntry -> LOGGER.info("Arrived from device device {}", telemetryEntry.getValue()))
                 .<Optional<DeviceTelemetryData>>map(telemetryEntry -> {
                     try {
                         return Optional.ofNullable(
-                                telemetryServices.retrieveStreamingTelemetry(telemetryEntry.getValue(), telemetryEntry.getKey())
+                                telemetryServices.getLatestD    eviceTelemetry(telemetryEntry.getKey(), telemetryEntry.getValue())
                         );
                     } catch (Exception e) {
                         LOGGER.error("Cannot retrieve telemetry due error: ", e);
@@ -94,11 +95,11 @@ public class BrokerClient {
                 .callback(mqtt5Publish -> {
                     try {
                         var topicLevels = mqtt5Publish.getTopic().getLevels();
-                        var deviceInternalName = topicLevels.getLast();
-                        var telemetryId = UUID.fromString(new String(mqtt5Publish.getPayloadAsBytes()));
+                        var deviceType = DeviceType.valueOf(topicLevels.getLast());
+                        var deviceInternalName = new String(mqtt5Publish.getPayloadAsBytes());
                         deviceTelemetryIdStream.onNext(
                                 new AbstractMap.SimpleEntry<>(
-                                        telemetryId,
+                                        deviceType,
                                         deviceInternalName
                                 )
                         );

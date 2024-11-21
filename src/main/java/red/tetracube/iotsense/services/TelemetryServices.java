@@ -7,6 +7,7 @@ import red.tetracube.iotsense.database.entities.Device;
 import red.tetracube.iotsense.dto.DeviceTelemetryData;
 import red.tetracube.iotsense.dto.Result;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
+import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
 import red.tetracube.iotsense.modules.ups.dto.UPSTelemetryData;
 
@@ -35,18 +36,15 @@ public class TelemetryServices {
         return Result.success(telemetry);
     }
 
-    public DeviceTelemetryData retrieveStreamingTelemetry(String deviceInternalName, UUID telemetryId) {
+    public DeviceTelemetryData getLatestDeviceTelemetry(DeviceType deviceType, String deviceInternalName) {
         var optionalDevice = Device.<Device>find("internalName", deviceInternalName).firstResultOptional();
-        if (optionalDevice.isEmpty()) {
-            return null;
-        }
-        var deviceType = optionalDevice.get().deviceType;
-        return switch (deviceType) {
-            case UPS -> {
-                var rawTelemetry = upsPulsarAPIClient.getUPSTelemetryById(telemetryId);
-                yield telemetryAPIFromInternalAPI(optionalDevice.get().slug, rawTelemetry);
-            }
-        };
+        return optionalDevice.map(device -> switch (deviceType) {
+                    case UPS -> {
+                        var rawTelemetry = upsPulsarAPIClient.getUPSTelemetry(deviceInternalName);
+                        yield telemetryAPIFromInternalAPI(device.slug, rawTelemetry);
+                    }
+                })
+                .orElse(null);
     }
 
     private DeviceTelemetryData telemetryAPIFromInternalAPI(String slug, UPSTelemetryData rawTelemetry) {
