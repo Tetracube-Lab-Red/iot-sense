@@ -1,6 +1,6 @@
 package red.tetracube.iotsense.enumerations;
 
-public enum ConnectivityStatus {
+public enum ConnectivityHealth {
     UNREACHABLE,
     ONLINE
 }

@@ -72,7 +72,7 @@ public class BrokerClient {
                 .<Optional<DeviceTelemetryData>>map(telemetryEntry -> {
                     try {
                         return Optional.ofNullable(
-                                telemetryServices.getLatestD    eviceTelemetry(telemetryEntry.getKey(), telemetryEntry.getValue())
+                                telemetryServices.getLatestDeviceTelemetry(telemetryEntry.getKey(), telemetryEntry.getValue())
                         );
                     } catch (Exception e) {
                         LOGGER.error("Cannot retrieve telemetry due error: ", e);

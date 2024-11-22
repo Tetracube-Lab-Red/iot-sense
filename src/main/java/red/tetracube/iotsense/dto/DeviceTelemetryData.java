@@ -3,8 +3,8 @@ package red.tetracube.iotsense.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import red.tetracube.iotsense.enumerations.ConnectivityStatus;
-import red.tetracube.iotsense.enumerations.TelemetryStatus;
+import red.tetracube.iotsense.enumerations.ConnectivityHealth;
+import red.tetracube.iotsense.enumerations.TelemetryHealth;
 import red.tetracube.iotsense.enumerations.UPSStatus;
 
 import java.time.Instant;
@@ -27,10 +27,10 @@ public abstract class DeviceTelemetryData {
     public Instant telemetryTS;
 
     @JsonProperty
-    public ConnectivityStatus connectivityStatus;
+    public ConnectivityHealth connectivityHealth;
 
     @JsonProperty
-    public TelemetryStatus telemetryStatus;
+    public TelemetryHealth telemetryHealth;
 
     public static class UPSTelemetryData extends DeviceTelemetryData {
         public float outFrequency;

@@ -1,8 +1,8 @@
 package red.tetracube.iotsense.modules.ups.dto;
 
 
-import red.tetracube.iotsense.enumerations.ConnectivityStatus;
-import red.tetracube.iotsense.enumerations.TelemetryStatus;
+import red.tetracube.iotsense.enumerations.ConnectivityHealth;
+import red.tetracube.iotsense.enumerations.TelemetryHealth;
 import red.tetracube.iotsense.enumerations.UPSStatus;
 
 import java.time.Instant;
@@ -22,8 +22,8 @@ public record UPSTelemetryData(
         float powerFactor,
         float batteryCharge,
         List<UPSStatus> statuses,
-        ConnectivityStatus connectivityStatus,
-        TelemetryStatus telemetryStatus,
+        ConnectivityHealth connectivityHealth,
+        TelemetryHealth telemetryHealth,
         Instant telemetryTS
 ) {
 }

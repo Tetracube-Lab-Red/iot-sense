@@ -11,8 +11,6 @@ import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
 import red.tetracube.iotsense.modules.ups.dto.UPSTelemetryData;
 
-import java.util.UUID;
-
 @ApplicationScoped
 public class TelemetryServices {
 
@@ -63,8 +61,8 @@ public class TelemetryServices {
         response.powerFactor = rawTelemetry.powerFactor();
         response.batteryCharge = rawTelemetry.batteryCharge();
         response.statuses = rawTelemetry.statuses();
-        response.connectivityStatus = rawTelemetry.connectivityStatus();
-        response.telemetryStatus = rawTelemetry.telemetryStatus();
+        response.connectivityHealth = rawTelemetry.connectivityHealth();
+        response.telemetryHealth = rawTelemetry.telemetryHealth();
         return response;
     }
 }
