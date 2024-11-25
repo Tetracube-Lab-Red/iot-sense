@@ -55,6 +55,12 @@ public class DeviceServices {
 
         device.roomSlug = roomSlug;
         device.persist();
+
+        var response = new DeviceRoomJoin(
+                device.slug,
+                device.roomSlug
+        );
+        return Result.success(response);
     }
 
     @Transactional(rollbackOn = {Exception.class})

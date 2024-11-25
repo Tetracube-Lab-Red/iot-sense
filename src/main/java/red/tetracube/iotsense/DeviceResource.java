@@ -78,10 +78,11 @@ public class DeviceResource {
 
         if (deviceRoomJoinResult.getException() instanceof IoTSenseException.EntityNotFoundException) {
             throw new ClientErrorException("Device already exists", Response.Status.NOT_FOUND);
+        } else if (deviceRoomJoinResult.getException() instanceof IoTSenseException.UnauthorizedException) {
+            throw new ClientErrorException("Device already exists", Response.Status.UNAUTHORIZED);
         } else {
             throw new InternalServerErrorException(deviceRoomJoinResult.getException());
         }
     }
-
 
 }
