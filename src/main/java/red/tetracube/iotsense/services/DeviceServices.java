@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import red.tetracube.iotsense.database.entities.Device;
 import red.tetracube.iotsense.database.entities.DeviceSupportedCommand;
-import red.tetracube.iotsense.dto.DeviceCreateRequest;
-import red.tetracube.iotsense.dto.DeviceCreateResponse;
-import red.tetracube.iotsense.dto.DeviceDataItem;
-import red.tetracube.iotsense.dto.Result;
+import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
@@ -42,6 +39,22 @@ public class DeviceServices {
                         )
                 )
                 .toList();
+    }
+
+    @Transactional
+    public Result<DeviceRoomJoin> deviceRoomJoin(String hubSlug, String deviceSlug, String roomSlug) {
+        var optionalDevice = Device.<Device>find("slug", deviceSlug)
+                .firstResultOptional();
+        if(optionalDevice.isEmpty()) {
+            return Result.failed(new IoTSenseException.EntityNotFoundException("Device not found"));
+        }
+        var device = optionalDevice.get();
+        if (!device.hubSlug.equals(hubSlug)) {
+            return Result.failed(new IoTSenseException.UnauthorizedException("Cannot edit the device"));
+        }
+
+        device.roomSlug = roomSlug;
+        device.persist();
     }
 
     @Transactional(rollbackOn = {Exception.class})
