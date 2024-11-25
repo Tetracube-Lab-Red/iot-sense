@@ -28,7 +28,7 @@ public class DeviceServices {
 
     @Transactional
     public List<DeviceDataItem> getDevices(String hubSlug) {
-        return Device.<Device>findAll().stream()
+        return Device.<Device>find("hubSlug", hubSlug).stream()
                 .map(device ->
                         new DeviceDataItem(
                                 device.id,
