@@ -13,6 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.dto.DeviceCreateRequest;
 import red.tetracube.iotsense.dto.DeviceCreateResponse;
+import red.tetracube.iotsense.dto.DeviceRoomJoin;
 import red.tetracube.iotsense.dto.GetDevicesResponse;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
@@ -63,5 +64,24 @@ public class DeviceResource {
         var devices = deviceServices.getDevices(hubSlug);
         return new GetDevicesResponse(devices);
     }
+
+    @RunOnVirtualThread
+    @PATCH
+    @Path("/room")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public DeviceRoomJoin deviceRoomJoin(@RequestBody @Valid DeviceRoomJoin request) {
+        var deviceRoomJoinResult = deviceServices.deviceRoomJoin(hubSlug, request.deviceSlug(), request.roomSlug());
+        if (deviceRoomJoinResult.isSuccess()) {
+            return deviceRoomJoinResult.getContent();
+        }
+
+        if (deviceRoomJoinResult.getException() instanceof IoTSenseException.EntityNotFoundException) {
+            throw new ClientErrorException("Device already exists", Response.Status.NOT_FOUND);
+        } else {
+            throw new InternalServerErrorException(deviceRoomJoinResult.getException());
+        }
+    }
+
 
 }
