@@ -1,5 +1,6 @@
 package red.tetracube.iotsense.services;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -11,12 +12,15 @@ import red.tetracube.iotsense.database.entities.Device;
 import red.tetracube.iotsense.database.entities.DeviceSupportedCommand;
 import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
+import red.tetracube.iotsense.enumerations.DeviceCommandType;
 import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.modules.ups.NotiFluxAPIClient;
 import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
 import red.tetracube.iotsense.modules.ups.dto.NotiFluxDeviceProvisioningRequest;
 import red.tetracube.iotsense.modules.ups.dto.UPSPulsarDeviceProvisioningRequest;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,7 +59,7 @@ public class DeviceServices {
     public Result<DeviceRoomJoin> deviceRoomJoin(String hubSlug, String deviceSlug, String roomSlug) {
         var optionalDevice = Device.<Device>find("slug", deviceSlug)
                 .firstResultOptional();
-        if(optionalDevice.isEmpty()) {
+        if (optionalDevice.isEmpty()) {
             return Result.failed(new IoTSenseException.EntityNotFoundException("Device not found"));
         }
         var device = optionalDevice.get();
@@ -88,6 +92,7 @@ public class DeviceServices {
         var device = new Device();
         device.internalName = switch (request.deviceType) {
             case UPS -> request.upsProvisioning.internalName;
+            case SWITCH -> deviceSlug; // ToDo: temporary code
         };
         device.id = UUID.randomUUID();
         device.slug = deviceSlug;
@@ -95,7 +100,7 @@ public class DeviceServices {
         device.hubSlug = hubSlug;
         device.roomSlug = request.roomSlug;
         device.deviceType = request.deviceType;
-        device.deviceSupportedCommands = buildDeviceInteractionsForDeviceType(request.deviceType);
+        device.deviceSupportedCommands = buildDeviceInteractionsForDeviceType(request.deviceType, device);
         device.persist();
 
         LOGGER.info("Calling right module for device provisioning");
@@ -111,39 +116,59 @@ public class DeviceServices {
         return Result.success(response);
     }
 
-    private List<DeviceSupportedCommand> buildDeviceInteractionsForDeviceType(DeviceType deviceType) {
+    private List<DeviceSupportedCommand> buildDeviceInteractionsForDeviceType(DeviceType deviceType, Device deviceEntity) {
         return switch (deviceType) {
             case UPS -> null;
+            case SWITCH -> List.of(
+                    new DeviceSupportedCommand() {{
+                        this.deviceCommandType = DeviceCommandType.SWITCH;
+                        this.device = deviceEntity;
+                    }}
+            );
         };
     }
 
     private void publishDeviceProvisioning(UUID deviceId, String deviceSlug, DeviceCreateRequest deviceCreateRequest) {
-        String deviceInternalName = null;
-        if (deviceCreateRequest.deviceType == DeviceType.UPS) {
-            LOGGER.info("Transmitting UPS provisioning to ups pulsar module");
-            var deviceProvisioningRequest = new UPSPulsarDeviceProvisioningRequest(
-                    deviceCreateRequest.upsProvisioning.deviceAddress,
-                    deviceCreateRequest.upsProvisioning.devicePort,
-                    deviceCreateRequest.upsProvisioning.internalName
-            );
-            // ToDo: if the device already provisioned, verify that there is another device registered with the same internal name, in that case go on storing the missing data in iot-sense schema
-            upsPulsarAPIClient.deviceProvisioning(deviceProvisioningRequest);
-            deviceInternalName =  deviceCreateRequest.upsProvisioning.internalName;
-        }
-        if(iotSenseConfig.modules().notiflux().enabled()) {
+        List<Uni<Void>> requests = new ArrayList<>();
+        if (iotSenseConfig.modules().notiflux().enabled()) {
             LOGGER.info("Transmitting device provisioning to notiflux module");
-            if (deviceInternalName == null) {
-                LOGGER.error("The device internal name is null, cannot provisioning new device in NotiFlux");
-                return;
-            }
-            var notiFluxProvisioningRequest = new NotiFluxDeviceProvisioningRequest(
-                    deviceId,
-                    deviceCreateRequest.deviceType,
-                    deviceInternalName,
-                    deviceSlug
+            requests.add(
+                    createNotiFluxProvisioningRequest(
+                            deviceId,
+                            deviceCreateRequest.deviceType,
+                            deviceSlug,
+                            deviceCreateRequest.upsProvisioning.internalName
+                    )
             );
-            notiFluxAPIClient.deviceProvisioning(notiFluxProvisioningRequest);
         }
+        switch (deviceCreateRequest.deviceType) {
+            case UPS -> {
+                LOGGER.info("Transmitting UPS provisioning to ups pulsar module");
+                var deviceProvisioningRequest = new UPSPulsarDeviceProvisioningRequest(
+                        deviceCreateRequest.upsProvisioning.deviceAddress,
+                        deviceCreateRequest.upsProvisioning.devicePort,
+                        deviceCreateRequest.upsProvisioning.internalName
+                );
+                requests.add(upsPulsarAPIClient.deviceProvisioning(deviceProvisioningRequest));
+            }
+            case SWITCH -> {
+                LOGGER.info("Transmitting SWITCH provisioning to switch module");
+            }
+        }
+        Uni.join()
+                .all(requests)
+                .andCollectFailures()
+                .await()
+                .atMost(Duration.ofSeconds(10));
     }
 
+    private Uni<Void> createNotiFluxProvisioningRequest(UUID deviceId, DeviceType deviceType, String deviceSlug, String deviceInternalName) {
+        var notiFluxProvisioningRequest = new NotiFluxDeviceProvisioningRequest(
+                deviceId,
+                deviceType,
+                deviceInternalName,
+                deviceSlug
+        );
+        return notiFluxAPIClient.deviceProvisioning(notiFluxProvisioningRequest);
+    }
 }

@@ -1,5 +1,6 @@
 package red.tetracube.iotsense.modules.ups;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -16,6 +17,6 @@ public interface NotiFluxAPIClient {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void deviceProvisioning(NotiFluxDeviceProvisioningRequest request);
+    Uni<Void> deviceProvisioning(NotiFluxDeviceProvisioningRequest request);
 
 }
