@@ -3,7 +3,7 @@ package red.tetracube.iotsense.modules.ups;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import red.tetracube.iotsense.modules.ups.dto.DeviceProvisioningRequest;
+import red.tetracube.iotsense.modules.ups.dto.UPSPulsarDeviceProvisioningRequest;
 import red.tetracube.iotsense.modules.ups.dto.UPSTelemetryData;
 
 @Path("/ups-pulsar")
@@ -14,7 +14,7 @@ public interface UPSPulsarAPIClient {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void deviceProvisioning(DeviceProvisioningRequest request);
+    void deviceProvisioning(UPSPulsarDeviceProvisioningRequest request);
 
     @Path("/device/{internalName}/telemetry")
     @GET

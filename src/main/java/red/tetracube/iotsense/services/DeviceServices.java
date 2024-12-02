@@ -6,13 +6,16 @@ import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.database.entities.Device;
 import red.tetracube.iotsense.database.entities.DeviceSupportedCommand;
 import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
+import red.tetracube.iotsense.modules.ups.NotiFluxAPIClient;
 import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
-import red.tetracube.iotsense.modules.ups.dto.DeviceProvisioningRequest;
+import red.tetracube.iotsense.modules.ups.dto.NotiFluxDeviceProvisioningRequest;
+import red.tetracube.iotsense.modules.ups.dto.UPSPulsarDeviceProvisioningRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +25,14 @@ public class DeviceServices {
 
     @Inject
     @RestClient
+    NotiFluxAPIClient notiFluxAPIClient;
+
+    @Inject
+    @RestClient
     UPSPulsarAPIClient upsPulsarAPIClient;
+
+    @Inject
+    IoTSenseConfig iotSenseConfig;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
 
@@ -96,7 +106,7 @@ public class DeviceServices {
                 device.humanName,
                 device.roomSlug
         );
-        publishDeviceProvisioning(request);
+        publishDeviceProvisioning(device.id, device.slug, request);
 
         return Result.success(response);
     }
@@ -107,16 +117,32 @@ public class DeviceServices {
         };
     }
 
-    private void publishDeviceProvisioning(DeviceCreateRequest deviceCreateRequest) {
+    private void publishDeviceProvisioning(UUID deviceId, String deviceSlug, DeviceCreateRequest deviceCreateRequest) {
+        String deviceInternalName = null;
         if (deviceCreateRequest.deviceType == DeviceType.UPS) {
             LOGGER.info("Transmitting UPS provisioning to ups pulsar module");
-            var deviceProvisioningRequest = new DeviceProvisioningRequest(
+            var deviceProvisioningRequest = new UPSPulsarDeviceProvisioningRequest(
                     deviceCreateRequest.upsProvisioning.deviceAddress,
                     deviceCreateRequest.upsProvisioning.devicePort,
                     deviceCreateRequest.upsProvisioning.internalName
             );
             // ToDo: if the device already provisioned, verify that there is another device registered with the same internal name, in that case go on storing the missing data in iot-sense schema
             upsPulsarAPIClient.deviceProvisioning(deviceProvisioningRequest);
+            deviceInternalName =  deviceCreateRequest.upsProvisioning.internalName;
+        }
+        if(iotSenseConfig.modules().notiflux().enabled()) {
+            LOGGER.info("Transmitting device provisioning to notiflux module");
+            if (deviceInternalName == null) {
+                LOGGER.error("The device internal name is null, cannot provisioning new device in NotiFlux");
+                return;
+            }
+            var notiFluxProvisioningRequest = new NotiFluxDeviceProvisioningRequest(
+                    deviceId,
+                    deviceCreateRequest.deviceType,
+                    deviceInternalName,
+                    deviceSlug
+            );
+            notiFluxAPIClient.deviceProvisioning(notiFluxProvisioningRequest);
         }
     }
 
