@@ -1,4 +1,4 @@
-package red.tetracube.iotsense.modules.ups;
+package red.tetracube.iotsense.modules.notification;
 
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.Consumes;
@@ -7,7 +7,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import red.tetracube.iotsense.modules.ups.dto.NotiFluxDeviceProvisioningRequest;
+import red.tetracube.iotsense.modules.notification.dto.NotiFluxDeviceProvisioningRequest;
 
 @Path("/notiflux")
 @RegisterRestClient(configKey = "notiflux-api")

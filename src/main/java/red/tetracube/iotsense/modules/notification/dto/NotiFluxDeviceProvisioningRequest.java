@@ -1,4 +1,4 @@
-package red.tetracube.iotsense.modules.ups.dto;
+package red.tetracube.iotsense.modules.notification.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import red.tetracube.iotsense.enumerations.DeviceType;

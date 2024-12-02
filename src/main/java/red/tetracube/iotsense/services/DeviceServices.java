@@ -14,9 +14,9 @@ import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceCommandType;
 import red.tetracube.iotsense.enumerations.DeviceType;
-import red.tetracube.iotsense.modules.ups.NotiFluxAPIClient;
+import red.tetracube.iotsense.modules.notification.NotiFluxAPIClient;
 import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
-import red.tetracube.iotsense.modules.ups.dto.NotiFluxDeviceProvisioningRequest;
+import red.tetracube.iotsense.modules.notification.dto.NotiFluxDeviceProvisioningRequest;
 import red.tetracube.iotsense.modules.ups.dto.UPSPulsarDeviceProvisioningRequest;
 
 import java.time.Duration;

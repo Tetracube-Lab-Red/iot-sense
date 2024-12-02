@@ -30,6 +30,7 @@ public class TelemetryServices {
                 var rawTelemetry = upsPulsarAPIClient.getUPSTelemetry(internalName);
                 yield telemetryAPIFromInternalAPI(optionalDevice.get().slug, rawTelemetry);
             }
+            case SWITCH -> null;
         };
         return Result.success(telemetry);
     }
@@ -41,6 +42,7 @@ public class TelemetryServices {
                         var rawTelemetry = upsPulsarAPIClient.getUPSTelemetry(deviceInternalName);
                         yield telemetryAPIFromInternalAPI(device.slug, rawTelemetry);
                     }
+                    case SWITCH -> null;
                 })
                 .orElse(null);
     }
