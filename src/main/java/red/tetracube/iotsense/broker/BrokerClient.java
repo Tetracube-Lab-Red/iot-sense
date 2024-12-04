@@ -97,12 +97,7 @@ public class BrokerClient {
                         var topicLevels = mqtt5Publish.getTopic().getLevels();
                         var deviceType = DeviceType.valueOf(topicLevels.getLast());
                         var deviceInternalName = new String(mqtt5Publish.getPayloadAsBytes());
-                        deviceTelemetryIdStream.onNext(
-                                new AbstractMap.SimpleEntry<>(
-                                        deviceType,
-                                        deviceInternalName
-                                )
-                        );
+
                     } catch (Exception e) {
                         LOGGER.error("Invalid telemetry entry due error:", e);
                     }
