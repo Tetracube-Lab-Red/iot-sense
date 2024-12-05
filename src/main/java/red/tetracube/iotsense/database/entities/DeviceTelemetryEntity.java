@@ -9,7 +9,7 @@ import red.tetracube.iotsense.enumerations.*;
 
 @Entity
 @Table(name = "devices_telemetry")
-public class DeviceTelemetry extends PanacheEntityBase {
+public class DeviceTelemetryEntity extends PanacheEntityBase {
 
     @Id
     public UUID id;
@@ -29,8 +29,8 @@ public class DeviceTelemetry extends PanacheEntityBase {
     public Units units;
 
     @JoinColumn(name = "device_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Device.class)
-    public Device device;
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = DeviceEntity.class)
+    public DeviceEntity deviceEntity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "telemetry_value_type", nullable = false)

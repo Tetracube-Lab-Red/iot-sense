@@ -1,4 +1,4 @@
-package red.tetracube.iotsense;
+package red.tetracube.iotsense.devices;
 
 import io.quarkus.security.Authenticated;
 import io.smallrye.common.annotation.RunOnVirtualThread;
@@ -11,13 +11,14 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import red.tetracube.iotsense.config.IoTSenseConfig;
-import red.tetracube.iotsense.dto.DeviceCreateRequest;
-import red.tetracube.iotsense.dto.DeviceCreateResponse;
-import red.tetracube.iotsense.dto.DeviceRoomJoin;
-import red.tetracube.iotsense.dto.GetDevicesResponse;
+import red.tetracube.iotsense.devices.payloads.DeviceCreateRequest;
+import red.tetracube.iotsense.devices.payloads.DeviceCreateResponse;
+import red.tetracube.iotsense.devices.payloads.DeviceRoomJoinPayload;
+import red.tetracube.iotsense.devices.payloads.DevicesResponsePayload;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
-import red.tetracube.iotsense.services.DeviceServices;
+
+import java.util.UUID;
 
 @RequestScoped
 @Authenticated
@@ -25,8 +26,8 @@ import red.tetracube.iotsense.services.DeviceServices;
 public class DeviceResource {
 
     @Inject
-    @Claim(value = "hub_slug")
-    String hubSlug;
+    @Claim(value = "hub_id")
+    String hubId;
 
     @Inject
     DeviceServices deviceServices;
@@ -44,7 +45,7 @@ public class DeviceResource {
             throw new ServerErrorException(Response.Status.NOT_IMPLEMENTED, null);
         }
 
-        var deviceCreateResult = deviceServices.createDevice(hubSlug, request);
+        var deviceCreateResult = deviceServices.createDevice(getHubId(), request);
         if (deviceCreateResult.isSuccess()) {
             return deviceCreateResult.getContent();
         }
@@ -60,9 +61,9 @@ public class DeviceResource {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public GetDevicesResponse getDevices() {
-        var devices = deviceServices.getDevices(hubSlug);
-        return new GetDevicesResponse(devices);
+    public DevicesResponsePayload getDevices() {
+        var devices = deviceServices.getDevices(getHubId());
+        return new DevicesResponsePayload(devices);
     }
 
     @RunOnVirtualThread
@@ -70,8 +71,8 @@ public class DeviceResource {
     @Path("/room")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public DeviceRoomJoin deviceRoomJoin(@RequestBody @Valid DeviceRoomJoin request) {
-        var deviceRoomJoinResult = deviceServices.deviceRoomJoin(hubSlug, request.deviceSlug(), request.roomSlug());
+    public DeviceRoomJoinPayload deviceRoomJoin(@RequestBody @Valid DeviceRoomJoinPayload request) {
+        var deviceRoomJoinResult = deviceServices.deviceRoomJoin(getHubId(), request);
         if (deviceRoomJoinResult.isSuccess()) {
             return deviceRoomJoinResult.getContent();
         }
@@ -83,6 +84,10 @@ public class DeviceResource {
         } else {
             throw new InternalServerErrorException(deviceRoomJoinResult.getException());
         }
+    }
+
+    private UUID getHubId() {
+        return UUID.fromString(hubId);
     }
 
 }

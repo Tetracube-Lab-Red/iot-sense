@@ -1,7 +1,9 @@
-package red.tetracube.iotsense.dto;
+package red.tetracube.iotsense.devices.payloads;
 
 import jakarta.validation.constraints.*;
 import red.tetracube.iotsense.enumerations.DeviceType;
+
+import java.util.UUID;
 
 public class DeviceCreateRequest {
 
@@ -13,7 +15,7 @@ public class DeviceCreateRequest {
     @Pattern(regexp = "^[ \\w]+$") @Size(min = 5, max = 50)
     public String deviceName;
 
-    public String roomSlug;
+    public UUID roomId;
 
     public UPSProvisioningFields upsProvisioning;
 

@@ -1,4 +1,4 @@
-package red.tetracube.iotsense.services;
+package red.tetracube.iotsense.devices;
 
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -7,20 +7,19 @@ import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import red.tetracube.iotsense.devices.payloads.DeviceCreateRequest;
 import red.tetracube.iotsense.config.IoTSenseConfig;
-import red.tetracube.iotsense.database.entities.Device;
-import red.tetracube.iotsense.database.entities.DeviceSupportedCommand;
+import red.tetracube.iotsense.database.entities.DeviceEntity;
+import red.tetracube.iotsense.devices.payloads.DeviceCreateResponse;
+import red.tetracube.iotsense.devices.payloads.DevicePayload;
+import red.tetracube.iotsense.devices.payloads.DeviceRoomJoinPayload;
 import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
-import red.tetracube.iotsense.enumerations.DeviceCommandType;
 import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.modules.notification.NotiFluxAPIClient;
 import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
 import red.tetracube.iotsense.modules.notification.dto.NotiFluxDeviceProvisioningRequest;
-import red.tetracube.iotsense.modules.ups.dto.UPSPulsarDeviceProvisioningRequest;
 
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,95 +40,75 @@ public class DeviceServices {
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
 
     @Transactional
-    public List<DeviceDataItem> getDevices(String hubSlug) {
-        return Device.<Device>find("hubSlug", hubSlug).stream()
-                .map(device ->
-                        new DeviceDataItem(
-                                device.id,
-                                device.deviceType,
-                                device.slug,
-                                device.humanName,
-                                device.roomSlug
+    public List<DevicePayload> getDevices(UUID hubId) {
+        return DeviceEntity.findByHub(hubId).stream()
+                .map(deviceEntity ->
+                        new DevicePayload(
+                                deviceEntity.id,
+                                deviceEntity.deviceType,
+                                deviceEntity.humanName,
+                                deviceEntity.roomId
                         )
                 )
                 .toList();
     }
 
     @Transactional
-    public Result<DeviceRoomJoin> deviceRoomJoin(String hubSlug, String deviceSlug, String roomSlug) {
-        var optionalDevice = Device.<Device>find("slug", deviceSlug)
-                .firstResultOptional();
+    public Result<DeviceRoomJoinPayload> deviceRoomJoin(UUID hubId, DeviceRoomJoinPayload joinPayload) {
+        var optionalDevice = DeviceEntity.<DeviceEntity>findByIdOptional(joinPayload.deviceId());
         if (optionalDevice.isEmpty()) {
             return Result.failed(new IoTSenseException.EntityNotFoundException("Device not found"));
         }
         var device = optionalDevice.get();
-        if (!device.hubSlug.equals(hubSlug)) {
+        if (!device.hubId.equals(hubId)) {
             return Result.failed(new IoTSenseException.UnauthorizedException("Cannot edit the device"));
         }
 
-        device.roomSlug = roomSlug;
+        device.roomId = joinPayload.roomId();
         device.persist();
 
-        var response = new DeviceRoomJoin(
-                device.slug,
-                device.roomSlug
+        var response = new DeviceRoomJoinPayload(
+                device.id,
+                device.roomId
         );
         return Result.success(response);
     }
 
     @Transactional(rollbackOn = {Exception.class})
-    public Result<DeviceCreateResponse> createDevice(String hubSlug, DeviceCreateRequest request) {
-        LOGGER.info("Create device slug from the name");
-        var deviceSlug = request.deviceName.trim().replaceAll(" ", "_").toLowerCase();
-
+    public Result<DeviceCreateResponse> createDevice(UUID hubId, DeviceCreateRequest request) {
         LOGGER.info("Check if device already registered");
-        var deviceExists = Device.existsBySlug(deviceSlug);
+        var deviceExists = DeviceEntity.existsByName(request.deviceName);
         if (deviceExists) {
             return Result.failed(new IoTSenseException.EntityExistsException("Device already exists"));
         }
 
         LOGGER.info("Store device in database");
-        var device = new Device();
+        var device = new DeviceEntity();
+        device.id = UUID.randomUUID();
         device.internalName = switch (request.deviceType) {
             case UPS -> request.upsProvisioning.internalName;
-            case SWITCH -> deviceSlug; // ToDo: temporary code
+            case SWITCH -> request.deviceName; // ToDo: temporary code
         };
-        device.id = UUID.randomUUID();
-        device.slug = deviceSlug;
         device.humanName = request.deviceName;
-        device.hubSlug = hubSlug;
-        device.roomSlug = request.roomSlug;
+        device.hubId = hubId;
+        device.roomId = request.roomId;
         device.deviceType = request.deviceType;
-        device.deviceSupportedCommands = buildDeviceInteractionsForDeviceType(request.deviceType, device);
         device.persist();
 
         LOGGER.info("Calling right module for device provisioning");
         var response = new DeviceCreateResponse(
                 device.id,
                 device.deviceType,
-                device.slug,
                 device.humanName,
-                device.roomSlug
+                device.roomId
         );
-        publishDeviceProvisioning(device.id, device.slug, request);
+      //  publishDeviceProvisioning(device.id, device.slug, request);
 
         return Result.success(response);
     }
 
-    private List<DeviceSupportedCommand> buildDeviceInteractionsForDeviceType(DeviceType deviceType, Device deviceEntity) {
-        return switch (deviceType) {
-            case UPS -> null;
-            case SWITCH -> List.of(
-                    new DeviceSupportedCommand() {{
-                        this.deviceCommandType = DeviceCommandType.SWITCH;
-                        this.device = deviceEntity;
-                    }}
-            );
-        };
-    }
-
     private void publishDeviceProvisioning(UUID deviceId, String deviceSlug, DeviceCreateRequest deviceCreateRequest) {
-        List<Uni<Void>> requests = new ArrayList<>();
+       /* List<Uni<Void>> requests = new ArrayList<>();
         if (iotSenseConfig.modules().notiflux().enabled()) {
             LOGGER.info("Transmitting device provisioning to notiflux module");
             requests.add(
@@ -159,7 +138,7 @@ public class DeviceServices {
                 .all(requests)
                 .andCollectFailures()
                 .await()
-                .atMost(Duration.ofSeconds(10));
+                .atMost(Duration.ofSeconds(10));*/
     }
 
     private Uni<Void> createNotiFluxProvisioningRequest(UUID deviceId, DeviceType deviceType, String deviceSlug, String deviceInternalName) {
