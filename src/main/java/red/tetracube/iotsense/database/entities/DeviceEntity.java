@@ -30,9 +30,6 @@ public class DeviceEntity extends PanacheEntityBase {
     @Column(name = "device_type", nullable = false)
     public DeviceType deviceType;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "deviceEntity", targetEntity = DeviceTelemetryEntity.class)
-    public List<DeviceTelemetryEntity> deviceTelemetries;
-
     public static Boolean existsByName(String name) {
         return DeviceEntity.count("humanName", name.trim()) == 1;
     }

@@ -1,8 +1,13 @@
 package red.tetracube.iotsense.devices.payloads.kafka;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public final class UPSProvisioning extends BaseInternalProvisioningPayload {
+public final class UPSProvisioning {
+
+    @JsonProperty
+    public UUID deviceId;
 
     @JsonProperty
     public String deviceAddress;
@@ -13,10 +18,11 @@ public final class UPSProvisioning extends BaseInternalProvisioningPayload {
     @JsonProperty
     public String internalName;
 
-    public UPSProvisioning(String deviceAddress, Integer devicePort, String internalName) {
+    public UPSProvisioning(UUID deviceId, String deviceAddress, Integer devicePort, String internalName) {
         this.deviceAddress = deviceAddress;
         this.devicePort = devicePort;
         this.internalName = internalName;
+        this.deviceId = deviceId;
     }    
 
 }

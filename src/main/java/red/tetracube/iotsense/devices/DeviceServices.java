@@ -10,13 +10,13 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.database.entities.DeviceEntity;
 import red.tetracube.iotsense.devices.mappers.ProvisioningAPIToKafkaPayloads;
 import red.tetracube.iotsense.devices.payloads.api.DeviceCreateRequest;
 import red.tetracube.iotsense.devices.payloads.api.DeviceCreateResponse;
 import red.tetracube.iotsense.devices.payloads.api.DevicePayload;
 import red.tetracube.iotsense.devices.payloads.api.DeviceRoomJoinPayload;
+import red.tetracube.iotsense.devices.payloads.kafka.UPSProvisioning;
 import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
@@ -25,9 +25,6 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class DeviceServices {
-
-    @Inject
-    IoTSenseConfig iotSenseConfig;
 
     @Inject
     @Channel("device-provisioning")
@@ -103,7 +100,10 @@ public class DeviceServices {
     }
 
     private void publishDeviceProvisioning(UUID deviceId, DeviceCreateRequest deviceCreateRequest) {
-        var kafkaPayload = new ProvisioningAPIToKafkaPayloads<>(deviceCreateRequest).doMapping();
+        var kafkaPayload = switch(deviceCreateRequest.deviceType) {
+            case DeviceType.UPS: 
+                yield ProvisioningAPIToKafkaPayloads.doMapping(UPSProvisioning.class, deviceId, deviceCreateRequest);
+        };
         deviceProvisioningEmitter.send(
             Record.of(
                 deviceCreateRequest.deviceType, 

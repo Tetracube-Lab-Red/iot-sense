@@ -1,4 +1,4 @@
-package red.tetracube.iotsense.dto;
+package red.tetracube.iotsense.telemetry.payloads;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;

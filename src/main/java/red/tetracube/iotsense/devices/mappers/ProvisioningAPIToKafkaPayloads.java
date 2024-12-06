@@ -1,28 +1,24 @@
 package red.tetracube.iotsense.devices.mappers;
 
+import java.util.UUID;
+
 import red.tetracube.iotsense.devices.payloads.api.DeviceCreateRequest;
-import red.tetracube.iotsense.devices.payloads.kafka.BaseInternalProvisioningPayload;
 import red.tetracube.iotsense.devices.payloads.kafka.UPSProvisioning;
 import red.tetracube.iotsense.enumerations.DeviceType;
 
-public class ProvisioningAPIToKafkaPayloads<S extends BaseInternalProvisioningPayload> {
+public class ProvisioningAPIToKafkaPayloads {
 
-    private final DeviceCreateRequest apiRequest;
-
-    public ProvisioningAPIToKafkaPayloads(DeviceCreateRequest apiRequest) {
-        this.apiRequest = apiRequest;
-    }
-
-    public BaseInternalProvisioningPayload doMapping() {
+    public static <S> S doMapping(Class<S> outType, UUID deviceId, DeviceCreateRequest apiRequest) {
         return switch (apiRequest.deviceType) {
             case DeviceType.UPS:
-                yield new UPSProvisioning(
-                        apiRequest.upsProvisioning.deviceAddress,
-                        apiRequest.upsProvisioning.devicePort,
-                        apiRequest.upsProvisioning.internalName
-                    );
-            default:
-                yield null;
+                yield outType.cast(
+                        new UPSProvisioning(
+                                deviceId,
+                                apiRequest.upsProvisioning.deviceAddress,
+                                apiRequest.upsProvisioning.devicePort,
+                                apiRequest.upsProvisioning.internalName
+                        )
+                );
         };
     }
 
