@@ -11,10 +11,10 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import red.tetracube.iotsense.config.IoTSenseConfig;
-import red.tetracube.iotsense.devices.payloads.DeviceCreateRequest;
-import red.tetracube.iotsense.devices.payloads.DeviceCreateResponse;
-import red.tetracube.iotsense.devices.payloads.DeviceRoomJoinPayload;
-import red.tetracube.iotsense.devices.payloads.DevicesResponsePayload;
+import red.tetracube.iotsense.devices.payloads.api.DeviceCreateRequest;
+import red.tetracube.iotsense.devices.payloads.api.DeviceCreateResponse;
+import red.tetracube.iotsense.devices.payloads.api.DeviceRoomJoinPayload;
+import red.tetracube.iotsense.devices.payloads.api.DevicesResponsePayload;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
 
@@ -37,7 +37,7 @@ public class DeviceResource {
 
     @RunOnVirtualThread
     @POST
-    @Path("/")
+    @Path("/provisioning")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public DeviceCreateResponse deviceCreate(@RequestBody @Valid DeviceCreateRequest request) {

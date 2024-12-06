@@ -1,25 +1,25 @@
 package red.tetracube.iotsense.devices;
 
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import io.smallrye.reactive.messaging.kafka.Record;
+
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import red.tetracube.iotsense.devices.payloads.DeviceCreateRequest;
+
 import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.database.entities.DeviceEntity;
-import red.tetracube.iotsense.devices.payloads.DeviceCreateResponse;
-import red.tetracube.iotsense.devices.payloads.DevicePayload;
-import red.tetracube.iotsense.devices.payloads.DeviceRoomJoinPayload;
+import red.tetracube.iotsense.devices.mappers.ProvisioningAPIToKafkaPayloads;
+import red.tetracube.iotsense.devices.payloads.api.DeviceCreateRequest;
+import red.tetracube.iotsense.devices.payloads.api.DeviceCreateResponse;
+import red.tetracube.iotsense.devices.payloads.api.DevicePayload;
+import red.tetracube.iotsense.devices.payloads.api.DeviceRoomJoinPayload;
 import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
-import red.tetracube.iotsense.modules.notification.NotiFluxAPIClient;
-import red.tetracube.iotsense.modules.ups.UPSPulsarAPIClient;
-import red.tetracube.iotsense.modules.notification.dto.NotiFluxDeviceProvisioningRequest;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -27,15 +27,11 @@ import java.util.UUID;
 public class DeviceServices {
 
     @Inject
-    @RestClient
-    NotiFluxAPIClient notiFluxAPIClient;
-
-    @Inject
-    @RestClient
-    UPSPulsarAPIClient upsPulsarAPIClient;
-
-    @Inject
     IoTSenseConfig iotSenseConfig;
+
+    @Inject
+    @Channel("device-provisioning")
+    Emitter<Record<DeviceType, Object>> deviceProvisioningEmitter;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
 
@@ -87,7 +83,6 @@ public class DeviceServices {
         device.id = UUID.randomUUID();
         device.internalName = switch (request.deviceType) {
             case UPS -> request.upsProvisioning.internalName;
-            case SWITCH -> request.deviceName; // ToDo: temporary code
         };
         device.humanName = request.deviceName;
         device.hubId = hubId;
@@ -102,52 +97,18 @@ public class DeviceServices {
                 device.humanName,
                 device.roomId
         );
-      //  publishDeviceProvisioning(device.id, device.slug, request);
+        publishDeviceProvisioning(device.id, request);
 
         return Result.success(response);
     }
 
-    private void publishDeviceProvisioning(UUID deviceId, String deviceSlug, DeviceCreateRequest deviceCreateRequest) {
-       /* List<Uni<Void>> requests = new ArrayList<>();
-        if (iotSenseConfig.modules().notiflux().enabled()) {
-            LOGGER.info("Transmitting device provisioning to notiflux module");
-            requests.add(
-                    createNotiFluxProvisioningRequest(
-                            deviceId,
-                            deviceCreateRequest.deviceType,
-                            deviceSlug,
-                            deviceCreateRequest.upsProvisioning.internalName
-                    )
-            );
-        }
-        switch (deviceCreateRequest.deviceType) {
-            case UPS -> {
-                LOGGER.info("Transmitting UPS provisioning to ups pulsar module");
-                var deviceProvisioningRequest = new UPSPulsarDeviceProvisioningRequest(
-                        deviceCreateRequest.upsProvisioning.deviceAddress,
-                        deviceCreateRequest.upsProvisioning.devicePort,
-                        deviceCreateRequest.upsProvisioning.internalName
-                );
-                requests.add(upsPulsarAPIClient.deviceProvisioning(deviceProvisioningRequest));
-            }
-            case SWITCH -> {
-                LOGGER.info("Transmitting SWITCH provisioning to switch module");
-            }
-        }
-        Uni.join()
-                .all(requests)
-                .andCollectFailures()
-                .await()
-                .atMost(Duration.ofSeconds(10));*/
-    }
-
-    private Uni<Void> createNotiFluxProvisioningRequest(UUID deviceId, DeviceType deviceType, String deviceSlug, String deviceInternalName) {
-        var notiFluxProvisioningRequest = new NotiFluxDeviceProvisioningRequest(
-                deviceId,
-                deviceType,
-                deviceInternalName,
-                deviceSlug
+    private void publishDeviceProvisioning(UUID deviceId, DeviceCreateRequest deviceCreateRequest) {
+        var kafkaPayload = new ProvisioningAPIToKafkaPayloads<>(deviceCreateRequest).doMapping();
+        deviceProvisioningEmitter.send(
+            Record.of(
+                deviceCreateRequest.deviceType, 
+                kafkaPayload
+            )
         );
-        return notiFluxAPIClient.deviceProvisioning(notiFluxProvisioningRequest);
     }
 }

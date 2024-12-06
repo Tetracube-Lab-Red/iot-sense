@@ -2,11 +2,6 @@ package red.tetracube.iotsense.broker;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hivemq.client.mqtt.MqttClient;
-import com.hivemq.client.mqtt.datatypes.MqttQos;
-import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
-import com.hivemq.client.mqtt.mqtt5.message.connect.connack.Mqtt5ConnAckReasonCode;
-import com.hivemq.client.mqtt.mqtt5.message.subscribe.suback.Mqtt5SubAck;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -32,7 +27,7 @@ public class BrokerClient {
     @Inject
     TelemetryServices telemetryServices;
 
-    private final Mqtt5AsyncClient client;
+   /*  private final Mqtt5AsyncClient client;
     private final BroadcastProcessor<Map.Entry<DeviceType, String>> deviceTelemetryIdStream = BroadcastProcessor.create();
 
     private final static Logger LOGGER = LoggerFactory.getLogger(BrokerClient.class);
@@ -126,6 +121,6 @@ public class BrokerClient {
                     }
                     LOGGER.info("Publish completes successfully");
                 });
-    }
+    } */
 
 }

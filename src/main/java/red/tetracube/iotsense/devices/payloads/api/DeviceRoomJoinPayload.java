@@ -1,4 +1,4 @@
-package red.tetracube.iotsense.devices.payloads;
+package red.tetracube.iotsense.devices.payloads.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;

@@ -1,4 +1,4 @@
-package red.tetracube.iotsense.devices.payloads;
+package red.tetracube.iotsense.devices.payloads.api;
 
 import red.tetracube.iotsense.enumerations.DeviceType;
 
