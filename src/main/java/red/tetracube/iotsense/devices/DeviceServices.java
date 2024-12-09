@@ -27,8 +27,8 @@ import java.util.UUID;
 public class DeviceServices {
 
     @Inject
-    @Channel("device-provisioning")
-    Emitter<Record<DeviceType, Object>> deviceProvisioningEmitter;
+    @Channel("device-provisioning-ups")
+    Emitter<Record<DeviceType, UPSProvisioning>> deviceProvisioningEmitter;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
 
@@ -100,15 +100,16 @@ public class DeviceServices {
     }
 
     private void publishDeviceProvisioning(UUID deviceId, DeviceCreateRequest deviceCreateRequest) {
-        var kafkaPayload = switch(deviceCreateRequest.deviceType) {
+        switch(deviceCreateRequest.deviceType) {
             case DeviceType.UPS: 
-                yield ProvisioningAPIToKafkaPayloads.doMapping(UPSProvisioning.class, deviceId, deviceCreateRequest);
+                var kafkaPayload = ProvisioningAPIToKafkaPayloads.doMapping(UPSProvisioning.class, deviceId, deviceCreateRequest);
+                deviceProvisioningEmitter.send(
+                    Record.of(
+                        deviceCreateRequest.deviceType, 
+                        kafkaPayload
+                    )
+                );
+                break;
         };
-        deviceProvisioningEmitter.send(
-            Record.of(
-                deviceCreateRequest.deviceType, 
-                kafkaPayload
-            )
-        );
     }
 }
