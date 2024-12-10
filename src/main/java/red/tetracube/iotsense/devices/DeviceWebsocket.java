@@ -21,7 +21,7 @@ public class DeviceWebsocket {
     DeviceServices deviceServices;
 
     @OnOpen
-    public Multi<DevicePayload> streamDeviceTelemetry() {
+    public Multi<DevicePayload> streamDevice() {
         return redisDataSource.pubsub(UUID.class)
                 .subscribe("device-update")
                 .emitOn(Infrastructure.getDefaultExecutor())
