@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'io.quarkus:quarkus-container-image-podman'
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
     implementation 'io.quarkus:quarkus-websockets-next'
     implementation 'io.quarkus:quarkus-rest-client-jackson'
@@ -31,7 +32,7 @@ dependencies {
 }
 
 group 'red.tetracube'
-version '2.0.0-SNAPSHOT'
+version '2.2.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
