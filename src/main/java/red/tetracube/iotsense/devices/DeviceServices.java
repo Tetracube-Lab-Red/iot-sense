@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import red.tetracube.iotsense.database.entities.DeviceEntity;
 import red.tetracube.iotsense.devices.mappers.ProvisioningAPIToKafkaPayloads;
 import red.tetracube.iotsense.devices.payloads.api.DeviceCreateRequest;
-import red.tetracube.iotsense.devices.payloads.api.DeviceCreateResponse;
 import red.tetracube.iotsense.devices.payloads.api.DevicePayload;
 import red.tetracube.iotsense.devices.payloads.api.DeviceRoomJoinPayload;
 import red.tetracube.iotsense.devices.payloads.kafka.UPSProvisioning;
@@ -21,6 +20,7 @@ import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.enumerations.ProvisioningStatus;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -39,10 +39,27 @@ public class DeviceServices {
                                 deviceEntity.id,
                                 deviceEntity.deviceType,
                                 deviceEntity.humanName,
-                                deviceEntity.roomId
+                                deviceEntity.roomId,
+                                deviceEntity.deviceType,
+                                deviceEntity.provisioningStatus
                         )
                 )
                 .toList();
+    }
+
+    @Transactional
+    public Optional<DevicePayload> getDevice(UUID deviceId) {
+        return DeviceEntity.<DeviceEntity>findByIdOptional(deviceId)
+                .map(deviceEntity ->
+                        new DevicePayload(
+                                deviceEntity.id,
+                                deviceEntity.deviceType,
+                                deviceEntity.humanName,
+                                deviceEntity.roomId,
+                                deviceEntity.deviceType,
+                                deviceEntity.provisioningStatus
+                        )
+                );
     }
 
     @Transactional
@@ -76,7 +93,7 @@ public class DeviceServices {
     }
 
     @Transactional(rollbackOn = {Exception.class})
-    public Result<DeviceCreateResponse> createDevice(UUID hubId, DeviceCreateRequest request) {
+    public Result<DevicePayload> createDevice(UUID hubId, DeviceCreateRequest request) {
         LOGGER.info("Check if device already registered");
         var deviceExists = DeviceEntity.existsByName(request.deviceName);
         if (deviceExists) {
@@ -94,11 +111,12 @@ public class DeviceServices {
         device.persist();
 
         LOGGER.info("Calling right module for device provisioning");
-        var response = new DeviceCreateResponse(
+        var response = new DevicePayload(
                 device.id,
                 device.deviceType,
                 device.humanName,
                 device.roomId,
+                device.deviceType,
                 device.provisioningStatus
         );
         publishDeviceProvisioning(device.id, request);
@@ -107,8 +125,8 @@ public class DeviceServices {
     }
 
     private void publishDeviceProvisioning(UUID deviceId, DeviceCreateRequest deviceCreateRequest) {
-        switch(deviceCreateRequest.deviceType) {
-            case DeviceType.UPS: 
+        switch (deviceCreateRequest.deviceType) {
+            case DeviceType.UPS:
                 var kafkaPayload = ProvisioningAPIToKafkaPayloads.doMapping(UPSProvisioning.class, deviceId, deviceCreateRequest);
                 eventBus.publish("device-provisioning", kafkaPayload);
                 break;

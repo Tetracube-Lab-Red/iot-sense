@@ -12,7 +12,7 @@ import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import red.tetracube.iotsense.config.IoTSenseConfig;
 import red.tetracube.iotsense.devices.payloads.api.DeviceCreateRequest;
-import red.tetracube.iotsense.devices.payloads.api.DeviceCreateResponse;
+import red.tetracube.iotsense.devices.payloads.api.DevicePayload;
 import red.tetracube.iotsense.devices.payloads.api.DeviceRoomJoinPayload;
 import red.tetracube.iotsense.devices.payloads.api.DevicesResponsePayload;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
@@ -40,7 +40,7 @@ public class DeviceResource {
     @Path("/provisioning")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public DeviceCreateResponse deviceCreate(@RequestBody @Valid DeviceCreateRequest request) {
+    public DevicePayload deviceCreate(@RequestBody @Valid DeviceCreateRequest request) {
         if (request.deviceType == DeviceType.UPS && !ioTSenseConfig.modules().ups().enabled()) {
             throw new ServerErrorException(Response.Status.NOT_IMPLEMENTED, null);
         }

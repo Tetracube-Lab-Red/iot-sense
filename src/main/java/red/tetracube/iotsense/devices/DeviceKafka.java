@@ -1,5 +1,6 @@
 package red.tetracube.iotsense.devices;
 
+import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.reactive.messaging.kafka.Record;
@@ -24,10 +25,14 @@ public class DeviceKafka {
     @Channel("device-provisioning-ups")
     Emitter<Record<DeviceType, UPSProvisioning>> upsProvisioningEmitter;
 
+    @Inject
+    RedisDataSource redisDataSource;
+
     @RunOnVirtualThread
     @Incoming("device-provisioning-ups-ack")
     public void consumeUPSProvisioningAck(UUID deviceId) {
         deviceServices.updateDeviceProvisioningStatus(deviceId, ProvisioningStatus.COMPLETED);
+        redisDataSource.pubsub(UUID.class).publish("device-update", deviceId);
     }
 
     @ConsumeEvent("device-provisioning")

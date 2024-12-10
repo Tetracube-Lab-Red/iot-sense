@@ -1,6 +1,7 @@
 package red.tetracube.iotsense.devices.payloads.api;
 
 import red.tetracube.iotsense.enumerations.DeviceType;
+import red.tetracube.iotsense.enumerations.ProvisioningStatus;
 
 import java.util.UUID;
 
@@ -8,6 +9,8 @@ public record DevicePayload(
         UUID id,
         DeviceType type,
         String name,
-        UUID roomId
+        UUID roomId,
+        DeviceType deviceType,
+        ProvisioningStatus provisioningStatus
 ) {
 }
