@@ -31,14 +31,15 @@ If you want to learn more about Quarkus, please visit its website: <https://quar
 
 The application relies on some settings to run correctly and these settings are about context where the application is going to run. To allow users to customize the application, there a few settings that are needed to be set.
 The application needs to be configured via following environment variables:
-* `DB_HOST`: MongoDB host name
-* `DB_USER`: MongoDB user credentials to login
-* `DB_PASSWD`: MongoDB password to login
-* `DB_NAME`: The name where the you whant store the data
-* `KAFKA_BOOTSTRAP_SERVERS`: The Kafka brokers base url
-* `HUB_SLUG`: The name of setted Hub in platform configuration phase (see the CLI utilities [🚧 Work in progress] to learn more)
-* `PUBLIC_KEY_LOCATION`: The pem public file to use to validate the JWT (see the CLI utility to know how to generate it)
-* `JWT_AUDIENCE`: The audience of the JWT (same used to generate the JWT with te CLI utility)
+
+* `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWD`, `DB_NAME`: Database connection data.
+* `KAFKA_BOOTSTRAP_SERVERS`: Kafka servers to connect with.
+* `HUB_TOKEN_ISSUER`: A unique name of your platform's installation. It is important that is the same set for `hub-central` service. It iss used to verify the valitity of the JWT token
+* `HUB_PLATFORM_URL`: The URL of your platform.
+* `PUBLIC_KEY_LOCATION`: The location of the public key to use for JWT verification. 
+* `UPS_PULSAR_ENABLED`: Enable UPS module.
+* `NOTIFLUX_ENABLED`: Enable notification module.
+* `REDIS_HOST`: Redis host.
 
 ## Running the application in dev mode
 
