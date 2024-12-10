@@ -2,14 +2,18 @@
 
 ## Overview
 
-Welcome to the IoT Data Collector and Streamer project! This open-source application is designed to facilitate the collection, storage, and real-time streaming of IoT data. It connects seamlessly with a Kafka message broker to receive data, stores it efficiently in a MongoDB database, and streams the collected data to mobile applications in real time.
+This is IoT Sense, the gateway to all home smart devices. IoT sense is a realtime gateway that connects your smart devices
+with your smartphone. 
 
 ### Key Features
 
-* Data Ingestion via Kafka: The application consumes IoT data streams from a Kafka broker, allowing it to handle high-throughput, real-time data from various IoT devices.
-* Efficient Data Storage: Data is stored in a MongoDB database for persistence, ensuring that all collected information is safely stored for further analysis and retrieval.
-* Real-Time Data Streaming: The application streams data to connected mobile applications using real-time communication protocols, ensuring up-to-date information for users and devices.
+The project is built around the idea of non-blocking operations and realtime functionalities.
+
+* Data Ingestion via Kafka: The application exchanges data via kafka to ensure high throughput and scalability in data transmission.
+* Real-Time Data Streaming: The application streams data to connected mobile applications using real-time communication 
+* protocols, like websocket and firebase notifications.
 * Scalable Design: Built to handle high volumes of data and users, the application can easily scale to meet the growing needs of IoT environments.
+* Module oriented: Each module is separated and decoupled from the core, in this way you can extend or activate only modules that you need.
 
 ## Architecture
 
@@ -18,8 +22,8 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 
 1. Kafka Integration: This application subscribes to Kafka topics and consumes messages containing IoT data from various sources (sensors, devices, etc.).
-2. MongoDB Storage: Collected data is structured and stored in MongoDB, providing both scalability and flexibility in data storage.
-3. Mobile Application Streaming: Using WebSockets or other real-time protocols, the application delivers updates and notifications directly to connected mobile clients.
+2. PostgreSQL database.
+3. Mobile Application Streaming: Using WebSockets and Redis for decouple data ingestion and WebSocket updates.
 
 ## Getting Started
 
