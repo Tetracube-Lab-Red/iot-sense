@@ -9,6 +9,7 @@ import red.tetracube.iotsense.enumerations.UPSStatus;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -18,10 +19,10 @@ import java.util.List;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = DeviceTelemetryData.UPSTelemetryData.class, name = "UPS_TELEMETRY_DATA")
 })
-public abstract class DeviceTelemetryData {
+public sealed class DeviceTelemetryData permits DeviceTelemetryData.UPSTelemetryData {
 
     @JsonProperty
-    public String deviceSlug;
+    public UUID deviceId;
 
     @JsonProperty
     public Instant telemetryTS;
@@ -32,19 +33,44 @@ public abstract class DeviceTelemetryData {
     @JsonProperty
     public TelemetryHealth telemetryHealth;
 
-    public static class UPSTelemetryData extends DeviceTelemetryData {
+    public static final class UPSTelemetryData extends DeviceTelemetryData {
+
+        @JsonProperty
         public float outFrequency;
+
+        @JsonProperty
         public float outVoltage;
+
+        @JsonProperty
         public float outCurrent;
+
+        @JsonProperty
         public float batteryVoltage;
+
+        @JsonProperty
         public Long batteryRuntime;
+
+        @JsonProperty
         public Long load;
+
+        @JsonProperty
         public float temperature;
+
+        @JsonProperty
         public float inFrequency;
+
+        @JsonProperty
         public float inVoltage;
+
+        @JsonProperty
         public float powerFactor;
+
+        @JsonProperty
         public float batteryCharge;
+
+        @JsonProperty
         public List<UPSStatus> statuses;
+
     }
 
 }

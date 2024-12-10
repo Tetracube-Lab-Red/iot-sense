@@ -8,8 +8,9 @@ import io.quarkus.websockets.next.WebSocket;
 import io.quarkus.websockets.next.WebSocketConnection;
 import io.smallrye.mutiny.Multi;
 import jakarta.inject.Inject;
-import red.tetracube.iotsense.enumerations.DeviceType;
 import red.tetracube.iotsense.telemetry.payloads.DeviceTelemetryData;
+
+import java.util.UUID;
 
 @WebSocket(path = "/devices/telemetry")
 public class TelemetryWebsocket {
@@ -17,8 +18,8 @@ public class TelemetryWebsocket {
     @Inject
     WebSocketConnection connection;
 
-    @Channel("device-telemetry")
-    Multi<ConsumerRecord<DeviceType, DeviceTelemetryData>> telemetries;
+    @Channel("device-telemetry-response")
+    Multi<ConsumerRecord<UUID, DeviceTelemetryData>> telemetries;
 
     @OnOpen
     public Multi<DeviceTelemetryData> streamDeviceTelemetry() {

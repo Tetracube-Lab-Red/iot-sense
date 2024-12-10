@@ -1,4 +1,4 @@
-package red.tetracube.iotsense.services;
+package red.tetracube.iotsense.telemetry;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

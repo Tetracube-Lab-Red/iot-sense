@@ -7,10 +7,8 @@ import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
-import red.tetracube.iotsense.services.TelemetryServices;
 
 @RequestScoped
 @Authenticated
@@ -21,9 +19,8 @@ public class TelemetryResource {
     TelemetryServices telemetryServices;
 
     @RunOnVirtualThread
-    @GET
+    @HEAD
     @Path("/")
-    @Produces(MediaType.WILDCARD)
     public void requestDeviceTelemetry(@PathParam("deviceId") UUID deviceId) {
         var requestTelemetryResult = telemetryServices.requestDeviceTelemetry(deviceId);
         if (!requestTelemetryResult.isSuccess()) {
