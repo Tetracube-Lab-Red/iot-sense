@@ -16,7 +16,8 @@ public class ProvisioningAPIToKafkaPayloads {
                                 deviceId,
                                 apiRequest.upsProvisioning.deviceAddress,
                                 apiRequest.upsProvisioning.devicePort,
-                                apiRequest.upsProvisioning.internalName
+                                apiRequest.upsProvisioning.internalName,
+                                apiRequest.deviceType
                         )
                 );
         };

@@ -1,12 +1,10 @@
 package red.tetracube.iotsense.devices;
 
+import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import io.smallrye.reactive.messaging.kafka.Record;
 
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +18,8 @@ import red.tetracube.iotsense.devices.payloads.kafka.UPSProvisioning;
 import red.tetracube.iotsense.dto.*;
 import red.tetracube.iotsense.dto.exceptions.IoTSenseException;
 import red.tetracube.iotsense.enumerations.DeviceType;
+import red.tetracube.iotsense.enumerations.ProvisioningStatus;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -27,8 +27,7 @@ import java.util.UUID;
 public class DeviceServices {
 
     @Inject
-    @Channel("device-provisioning-ups")
-    Emitter<Record<DeviceType, UPSProvisioning>> deviceProvisioningEmitter;
+    EventBus eventBus;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
 
@@ -67,6 +66,15 @@ public class DeviceServices {
         return Result.success(response);
     }
 
+    @Transactional
+    public void updateDeviceProvisioningStatus(UUID deviceId, ProvisioningStatus provisioningStatus) {
+        DeviceEntity.<DeviceEntity>findByIdOptional(deviceId)
+                .ifPresent(deviceEntity -> {
+                    deviceEntity.provisioningStatus = provisioningStatus;
+                    deviceEntity.persist();
+                });
+    }
+
     @Transactional(rollbackOn = {Exception.class})
     public Result<DeviceCreateResponse> createDevice(UUID hubId, DeviceCreateRequest request) {
         LOGGER.info("Check if device already registered");
@@ -78,13 +86,11 @@ public class DeviceServices {
         LOGGER.info("Store device in database");
         var device = new DeviceEntity();
         device.id = UUID.randomUUID();
-        device.internalName = switch (request.deviceType) {
-            case UPS -> request.upsProvisioning.internalName;
-        };
         device.humanName = request.deviceName;
         device.hubId = hubId;
         device.roomId = request.roomId;
         device.deviceType = request.deviceType;
+        device.provisioningStatus = ProvisioningStatus.CREATED;
         device.persist();
 
         LOGGER.info("Calling right module for device provisioning");
@@ -92,7 +98,8 @@ public class DeviceServices {
                 device.id,
                 device.deviceType,
                 device.humanName,
-                device.roomId
+                device.roomId,
+                device.provisioningStatus
         );
         publishDeviceProvisioning(device.id, request);
 
@@ -103,13 +110,8 @@ public class DeviceServices {
         switch(deviceCreateRequest.deviceType) {
             case DeviceType.UPS: 
                 var kafkaPayload = ProvisioningAPIToKafkaPayloads.doMapping(UPSProvisioning.class, deviceId, deviceCreateRequest);
-                deviceProvisioningEmitter.send(
-                    Record.of(
-                        deviceCreateRequest.deviceType, 
-                        kafkaPayload
-                    )
-                );
+                eventBus.publish("device-provisioning", kafkaPayload);
                 break;
-        };
+        }
     }
 }
