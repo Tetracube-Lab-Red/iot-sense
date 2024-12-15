@@ -7,7 +7,6 @@ import java.util.UUID;
 
 public record DevicePayload(
         UUID id,
-        DeviceType type,
         String name,
         UUID roomId,
         DeviceType deviceType,

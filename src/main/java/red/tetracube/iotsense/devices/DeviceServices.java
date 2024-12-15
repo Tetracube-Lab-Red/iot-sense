@@ -37,7 +37,6 @@ public class DeviceServices {
                 .map(deviceEntity ->
                         new DevicePayload(
                                 deviceEntity.id,
-                                deviceEntity.deviceType,
                                 deviceEntity.humanName,
                                 deviceEntity.roomId,
                                 deviceEntity.deviceType,
@@ -53,7 +52,6 @@ public class DeviceServices {
                 .map(deviceEntity ->
                         new DevicePayload(
                                 deviceEntity.id,
-                                deviceEntity.deviceType,
                                 deviceEntity.humanName,
                                 deviceEntity.roomId,
                                 deviceEntity.deviceType,
@@ -113,7 +111,6 @@ public class DeviceServices {
         LOGGER.info("Calling right module for device provisioning");
         var response = new DevicePayload(
                 device.id,
-                device.deviceType,
                 device.humanName,
                 device.roomId,
                 device.deviceType,
