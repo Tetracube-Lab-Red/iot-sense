@@ -22,6 +22,9 @@ import java.util.UUID;
 public sealed class DeviceTelemetryData permits DeviceTelemetryData.UPSTelemetryData {
 
     @JsonProperty
+    public UUID id;
+
+    @JsonProperty
     public UUID deviceId;
 
     @JsonProperty
