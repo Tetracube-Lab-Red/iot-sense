@@ -11,7 +11,7 @@ import red.tetracube.iotsense.devices.payloads.api.DevicePayload;
 import java.util.Optional;
 import java.util.UUID;
 
-@WebSocket(path = "/devices")
+@WebSocket(path = "/devices/ws")
 public class DeviceWebsocket {
 
     @Inject
